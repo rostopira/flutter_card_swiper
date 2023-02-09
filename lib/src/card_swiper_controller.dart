@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_card_swiper/src/enums.dart';
 
 //to call the swipe function from outside of the CardSwiper
@@ -32,6 +32,11 @@ class CardSwiperController extends ChangeNotifier {
   //swipe the card to the bottom side by changing the status of the controller
   void swipeBottom() {
     state = CardSwiperState.swipeBottom;
+    notifyListeners();
+  }
+  
+  void goBack() {
+    state = CardSwiperState.goBack;
     notifyListeners();
   }
 }

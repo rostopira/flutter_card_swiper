@@ -7,7 +7,10 @@ import 'package:flutter_card_swiper/src/typedefs.dart';
 
 class CardSwiper extends StatefulWidget {
   /// list of widgets for the swiper
-  final List<Widget?> cards;
+  final IndexedWidgetBuilder cardsBuilder;
+
+  /// total number of cards
+  final int cardsCount;
 
   /// controller to trigger actions
   final CardSwiperController? controller;
@@ -44,7 +47,8 @@ class CardSwiper extends StatefulWidget {
 
   const CardSwiper({
     Key? key,
-    required this.cards,
+    required this.cardsBuilder,
+    required this.cardsCount,
     this.controller,
     this.padding = const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
     this.duration = const Duration(milliseconds: 200),
@@ -102,7 +106,7 @@ class _CardSwiperState extends State<CardSwiper>
 
   double get _maxAngle => widget.maxAngle * (pi / 180);
 
-  bool get _isLastCard => _currentIndex == widget.cards.length - 1;
+  bool get _isLastCard => _currentIndex == widget.cardsCount - 1;
   int get _nextCardIndex => _isLastCard ? 0 : _currentIndex + 1;
 
   @override
@@ -122,8 +126,9 @@ class _CardSwiperState extends State<CardSwiper>
   @override
   void dispose() {
     super.dispose();
+    print("CardSwiper DISPOSED");
     _animationController.dispose();
-    widget.controller?.dispose();
+    widget.controller?.removeListener(_controllerListener);
   }
 
   @override
@@ -158,7 +163,7 @@ class _CardSwiperState extends State<CardSwiper>
           angle: _angle,
           child: ConstrainedBox(
             constraints: constraints,
-            child: widget.cards[_currentIndex],
+            child: widget.cardsBuilder(context, _currentIndex),
           ),
         ),
         onTap: () {
@@ -205,7 +210,7 @@ class _CardSwiperState extends State<CardSwiper>
         scale: _scale,
         child: ConstrainedBox(
           constraints: constraints,
-          child: widget.cards[_nextCardIndex],
+          child: widget.cardsBuilder(context, _nextCardIndex),
         ),
       ),
     );
@@ -228,6 +233,11 @@ class _CardSwiperState extends State<CardSwiper>
         break;
       case CardSwiperState.swipeBottom:
         _swipe(context, CardSwiperDirection.bottom);
+        break;
+      case CardSwiperState.goBack:
+        if (_currentIndex > 0) {
+          setState(() => _currentIndex--);
+        }
         break;
       default:
         break;
@@ -304,7 +314,7 @@ class _CardSwiperState extends State<CardSwiper>
   }
 
   void _swipe(BuildContext context, CardSwiperDirection direction) {
-    if (widget.cards.isEmpty) return;
+    if (widget.cardsCount == 0) return;
 
     switch (direction) {
       case CardSwiperDirection.left:
